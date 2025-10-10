@@ -86,7 +86,7 @@ def main():
     ):
         send_email_test(
             subject="Cozzi Secret Santa",
-            body=f"TEST PLEASE IGNORE -- {secret_santa}, you are secret santa for {family_member} this coming week.",
+            body=f"{secret_santa}, you are secret santa for {family_member} this coming week. Use the document here to record your gift ideas: https://docs.google.com/document/d/1VWQvmUEsggtSWMkpB7U1d8athg7qmb3w86-yT94Ja0c/edit?usp=sharing for ideas ",
             sender="eric@cozzi.us",
             recipients=[
                 recipient_email,
