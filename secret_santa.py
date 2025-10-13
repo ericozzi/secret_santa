@@ -78,20 +78,21 @@ def main():
     previous_santa_map = load_previous_santa_map()
 
     # this call will ensure no one is their own secret santa
-    # and no one has the same secret santa as last time
+    # and no one has the same secret santa as last week
     family_members = derange_list(secret_santas, previous_santa_map)
 
     for secret_santa, recipient_email, family_member in zip(
         secret_santas, recipient_emails, family_members
     ):
-        send_email_test(
+        send_email(
             subject="Cozzi Secret Santa",
-            body=f"{secret_santa}, you are secret santa for {family_member} this coming week. Use the document here to record your gift ideas: https://docs.google.com/document/d/1VWQvmUEsggtSWMkpB7U1d8athg7qmb3w86-yT94Ja0c/edit?usp=sharing for ideas ",
+            body=f"{secret_santa}, you are secret santa for {family_member} this coming week. Use the document here to record and see Secret Santa ideas: https://docs.google.com/document/d/1VWQvmUEsggtSWMkpB7U1d8athg7qmb3w86-yT94Ja0c/edit?usp=sharing",
             sender="eric@cozzi.us",
             recipients=[
                 recipient_email,
             ],
         )
+        print(f"Emailed {secret_santa}.")
 
     save_new_santa_map(zip(secret_santas, family_members))
 
