@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import json
 import random
@@ -57,17 +59,36 @@ def send_email_test(subject, body, sender, recipients):
     print(msg.as_string())
 
 
-def load_previous_santa_map():
+def load_list_of_santa_maps():
     if os.path.exists(PREVIOUS_DERANGEMENT_FILE):
         with open(PREVIOUS_DERANGEMENT_FILE, "r") as f:
-            previous_derangement_map = json.load(f)
-            return list(previous_derangement_map.values())
+            list_of_santa_maps = json.load(f)
+            return list(list_of_santa_maps)
     return None
 
 
-def save_new_santa_map(santa_map):
+def load_previous_santa_map():
+    list_of_santa_maps = load_list_of_santa_maps()
+    if list_of_santa_maps:
+        previous_santa_map = list_of_santa_maps[-1]
+        return previous_santa_map
+    return {}
+
+
+def get_recipients_from_santa_map(previous_santa_map:dict[str, str]):
+    if previous_santa_map:
+        previous_recipients = list(previous_santa_map.values())
+        return previous_recipients
+    return []
+
+
+def save_new_santa_map(new_santa_map):
+    list_of_santa_maps = load_list_of_santa_maps()
+    if not list_of_santa_maps:
+        list_of_santa_maps = []
+    list_of_santa_maps.append(dict(new_santa_map))
     with open(PREVIOUS_DERANGEMENT_FILE, "w") as f:
-        json.dump(dict(santa_map), f)
+        json.dump(list(list_of_santa_maps), f, indent=4)
 
 
 def main():
@@ -76,25 +97,26 @@ def main():
     recipient_emails = list(USER_MAP.values())
 
     previous_santa_map = load_previous_santa_map()
+    previous_recipients_list = get_recipients_from_santa_map(previous_santa_map)
 
-    # this call will ensure no one is their own secret santa
-    # and no one has the same secret santa as last week
-    family_members = derange_list(secret_santas, previous_santa_map)
+    new_recipients_list = derange_list(secret_santas, previous_recipients_list)
 
-    for secret_santa, recipient_email, family_member in zip(
-        secret_santas, recipient_emails, family_members
-    ):
-        send_email(
-            subject="Cozzi Secret Santa",
-            body=f"{secret_santa}, you are secret santa for {family_member} this coming week. Use the document here to record and see Secret Santa ideas: https://docs.google.com/document/d/1VWQvmUEsggtSWMkpB7U1d8athg7qmb3w86-yT94Ja0c/edit?usp=sharing",
-            sender="eric@cozzi.us",
-            recipients=[
-                recipient_email,
-            ],
-        )
-        print(f"Emailed {secret_santa}.")
+    if False:
+        for secret_santa, recipient_email, family_member in zip(
+            secret_santas, recipient_emails, new_recipients_list
+        ):
+            send_email(
+                subject="Cozzi Secret Santa",
+                body=f"{secret_santa}, you are secret santa for {family_member} this coming week. Use the document here to record and see Secret Santa ideas: https://docs.google.com/document/d/1VWQvmUEsggtSWMkpB7U1d8athg7qmb3w86-yT94Ja0c/edit?usp=sharing",
+                sender="eric@cozzi.us",
+                recipients=[
+                   recipient_email,
+                ],
+            )
+            print(f"Emailed {secret_santa}.")
 
-    save_new_santa_map(zip(secret_santas, family_members))
+    new_santa_map = dict(zip(secret_santas, new_recipients_list))
+    save_new_santa_map(new_santa_map)
 
 
 if __name__ == "__main__":
