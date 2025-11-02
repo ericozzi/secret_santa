@@ -101,7 +101,7 @@ def main():
 
     new_recipients_list = derange_list(secret_santas, previous_recipients_list)
 
-    if False:
+    if True:
         for secret_santa, recipient_email, family_member in zip(
             secret_santas, recipient_emails, new_recipients_list
         ):
