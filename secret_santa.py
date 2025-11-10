@@ -4,6 +4,7 @@ import os
 import json
 import random
 import smtplib
+import argparse
 
 from envs import APP_PASSWORD, USER_MAP
 from email.mime.text import MIMEText
@@ -91,12 +92,12 @@ def send_email_test(subject, body, sender, recipients):
     print(msg.as_string())
 
 
-def load_list_of_santa_maps():
+def load_list_of_santa_maps() -> list[dict[str, str]]:
     if os.path.exists(PREVIOUS_DERANGEMENT_FILE):
         with open(PREVIOUS_DERANGEMENT_FILE, "r") as f:
             list_of_santa_maps = json.load(f)
             return list(list_of_santa_maps)
-    return None
+    return []
 
 
 def load_previous_santa_map(list_of_santa_maps=None):
@@ -122,7 +123,7 @@ def save_new_santa_map(new_santa_map):
         json.dump(list(list_of_santa_maps), f, indent=4)
 
 
-def main():
+def generate_next_santa_map():
 
     secret_santas = list(USER_MAP.keys())
     recipient_emails = list(USER_MAP.values())
@@ -151,6 +152,40 @@ def main():
     save_new_santa_map(new_santa_map)
 
 
+def generate_report():
+    try:
+        from prettytable import PrettyTable
+        from collections import Counter
+
+        users = USER_MAP.copy()
+        list_of_santa_maps: list[dict[str, str]] = load_list_of_santa_maps()
+
+        table = PrettyTable(list(users.keys()))
+        for derangement in list_of_santa_maps:
+            row = [derangement[user] for user in users.keys()]
+            table.add_row(row)
+
+        print(table)
+
+        header = [""]
+        header.extend(list(users.keys()))
+        count_table = PrettyTable(header)
+
+        count_table.field_names = header
+        for i, user in enumerate(users.keys()):
+            flattened_list = [derangement[user] for derangement in list_of_santa_maps]
+            counts = Counter(flattened_list)
+            table_data = [user]
+            for u in users.keys():
+                table_data.append(str(counts.get(u, 0)))
+            count_table.add_row(table_data)
+
+        print(count_table)
+
+    except ImportError:
+        print("prettytable module not found. Please install it to generate report.")
+
+
 def test():
     from pprint import pprint
     from prettytable import PrettyTable
@@ -165,7 +200,7 @@ def test():
         # pprint(new_santa_map, sort_dicts=False, indent=4)
         historical.append(new_santa_map)
 
-    table = PrettyTable(users.keys())
+    table = PrettyTable(list(users.keys()))
     for derangement in historical:
         row = [derangement[user] for user in users.keys()]
         table.add_row(row)
@@ -173,6 +208,29 @@ def test():
     print(table)
 
 
+def main():
+    parser = argparse.ArgumentParser(
+        description="Secret Santa Derangement Generator and Reporter"
+    )
+    parser.add_argument(
+        "--generate",
+        action="store_true",
+        default=False,
+        help="Generate the next Secret Santa assignments",
+    )
+    parser.add_argument(
+        "--report",
+        action="store_true",
+        default=True,
+        help="Generate a report of past Secret Santa assignments",
+    )
+    args = parser.parse_args()
+
+    if args.report:
+        generate_report()
+    if args.generate:
+        generate_next_santa_map()
+
+
 if __name__ == "__main__":
-    # test()
     main()
