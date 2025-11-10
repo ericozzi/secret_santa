@@ -21,7 +21,7 @@ def check_historical_derangements(user_list, historical_derangements):
 
     from pprint import pprint
 
-    pprint(historical_derangements)
+    # pprint(historical_derangements)
     if historical_derangements is not None:
         check_historical_depth = min(
             DEFAULT_CHECK_HISTORICAL_DEPTH, len(historical_derangements)
@@ -152,13 +152,15 @@ def generate_next_santa_map():
     save_new_santa_map(new_santa_map)
 
 
-def generate_report():
+def generate_report(list_of_santa_maps: list[dict[str, str]] | None = None):
     try:
         from prettytable import PrettyTable
         from collections import Counter
 
         users = USER_MAP.copy()
-        list_of_santa_maps: list[dict[str, str]] = load_list_of_santa_maps()
+
+        if list_of_santa_maps is None:
+            list_of_santa_maps = load_list_of_santa_maps()
 
         table = PrettyTable(list(users.keys()))
         for derangement in list_of_santa_maps:
@@ -187,47 +189,51 @@ def generate_report():
 
 
 def test():
-    from pprint import pprint
-    from prettytable import PrettyTable
-
     historical = []
     users = USER_MAP.copy()
-    for _ in range(20):
-        secret_santas = list(users.keys())
-        # pprint(historical, indent=4)
+
+    secret_santas = list(users.keys())
+    for _ in range(1000):
         new_recipients_list = derange_list(secret_santas, historical)
         new_santa_map = dict(zip(secret_santas, new_recipients_list))
+
         # pprint(new_santa_map, sort_dicts=False, indent=4)
+
         historical.append(new_santa_map)
 
-    table = PrettyTable(list(users.keys()))
-    for derangement in historical:
-        row = [derangement[user] for user in users.keys()]
-        table.add_row(row)
-
-    print(table)
+    generate_report(historical)
+    return historical
 
 
 def main():
     parser = argparse.ArgumentParser(
         description="Secret Santa Derangement Generator and Reporter"
     )
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
         "--generate",
         action="store_true",
         default=False,
         help="Generate the next Secret Santa assignments",
     )
-    parser.add_argument(
+    group.add_argument(
+        "--test",
+        action="store_true",
+        default=False,
+        help="Run test derangements",
+    )
+    group.add_argument(
         "--report",
         action="store_true",
-        default=True,
+        default=False,
         help="Generate a report of past Secret Santa assignments",
     )
     args = parser.parse_args()
 
     if args.report:
         generate_report()
+    if args.test:
+        test()
     if args.generate:
         generate_next_santa_map()
 
